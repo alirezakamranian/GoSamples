@@ -13,6 +13,10 @@ type User struct {
 	UserName string
 }
 
+type CreateUserDto struct{
+	UserName string
+}
+
 func setupRouter() *gin.Engine {
 
 	db, err := gorm.Open(sqlserver.Open("sqlserver://sa:12230500o90P@127.0.0.1:1433?database=GormTest"), &gorm.Config{})
@@ -20,19 +24,28 @@ func setupRouter() *gin.Engine {
 		panic("failed to connect database")
 	}
 
-	//sqlserver://gorm:LoremIpsum86@localhost:9930?database=gorm
-	//Server=localhost;Database=Gorm;User Id=SA;Password=12230500o90P;TrustServerCertificate=True
 	println(db.Name())
-	// Migrate the schema
+
 	db.AutoMigrate(&User{})
 
 	r := gin.Default()
 
-	r.GET("/adduser", func(c *gin.Context) {
-		var name string
-		c.ShouldBind(&name)
-		db.Create(&User{UserName: "name"})
-		c.String(http.StatusOK, "pong")
+	r.POST("/adduser",func(c *gin.Context){
+		var user CreateUserDto
+		
+		if err := c.ShouldBindJSON(&user); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		db.Create(&User{UserName: user.UserName})
+		c.JSON(http.StatusOK, gin.H{"name": user.UserName})
+	})
+
+	r.GET("/getuser", func(c *gin.Context) {
+		var user User
+		db.Find(&user,user.UserName=="sina")
+		c.JSON(http.StatusOK, gin.H{"name":user.UserName,"Id":user.ID})
 	})
 
 	r.GET("/getdetails", func(c *gin.Context) {
