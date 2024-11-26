@@ -82,6 +82,12 @@ func main() {
 	val,exist := mapsample[1]
 
 	println(exist,val)
+
+	adress := &vari
+	value := *adress
+	println("vari adress : ",adress)
+	println("vari value : ",value)
+	
 }
 
 type person struct{
